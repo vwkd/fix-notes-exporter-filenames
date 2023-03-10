@@ -13,13 +13,13 @@ console.log(`Uppercasing notes in '${ROOT}'...`);
 for await (const {path, name, isFile, isDirectory, isSymlink} of walk(ROOT)) {
 	// console.log(`Processing entry '${JSON.stringify(path)}'`);
 	if (isSymlink) {
-		console.warn(`WARNING: Skipping symlink '${path}'`);
+		console.info(`NOTE: Skipping symlink '${path}'`);
 		continue;
 	} else if (isDirectory) {
 		console.info(`NOTE: Manually rename directory '${path}'`);
 	} else if (isFile) {
 		if (!path.endsWith(".md")) {
-      console.warn(`WARNING: Skipping non-markdown file '${path}'`);
+      console.info(`NOTE: Skipping non-markdown file '${path}'`);
 			continue;
 		}
 
@@ -32,12 +32,12 @@ for await (const {path, name, isFile, isDirectory, isSymlink} of walk(ROOT)) {
 
 		// frontmatter title
 		const content = await Deno.readTextFile(path);
-  //   const frontmatter = extract(content);
+	  // const frontmatter = extract(content);
 		// const title = frontmatter.attrs.title;
 		// console.log(frontmatter, title);
 		const title = get_title(content);
-		const titleBotched = unnecessary_umlaute(title);
-		const titleBotchedLowercase = unnecessary_umlaute(title.toLowerCase());
+		const titleBotched = botched_escapes(title);
+		const titleBotchedLowercase = botched_escapes(title.toLowerCase());
 		// console.log(title);
 
 		const re = /-(\d+)$/;
@@ -51,7 +51,7 @@ for await (const {path, name, isFile, isDirectory, isSymlink} of walk(ROOT)) {
 			const pathNew = join(dirpath, title + "-" + matches[1] + ".md");
 			await Deno.rename(path, pathNew);
 		} else {
-			console.warn(`WARNING: Skipping title different from filename '${path}'`);
+			console.warn(`WARNING: Unexpected titleBotchedLowercase '${titleBotchedLowercase}' different from filename '${filename}'. Skipping '${path}'...`);
 		}
 	}
 }
@@ -59,21 +59,31 @@ for await (const {path, name, isFile, isDirectory, isSymlink} of walk(ROOT)) {
 function get_title(content: string): string {
   const re = /^----\ntitle: (.+)$/m;
 	const matches = content.match(re);
-	return matches[1]
+	return matches[1];
 }
 
-function unnecessary_umlaute(filename: string): string {
-  return unnecessary_escapes(filename)
+function botched_escapes(filename: string): string {
+  return filename
 		// .replaceAll("Ä", "ä")
 		// .replaceAll("Ö", "ö")
 		// .replaceAll("Ü", "ü")
 		.replaceAll("ä", "\u0061\u0308")
 		.replaceAll("ö", "\u006F\u0308")
 		.replaceAll("ü", "\u0075\u0308")
-}
-
-function unnecessary_escapes(filename: string): string {
-  return filename
+    .replaceAll("á", "\u0061\u0301")
+    .replaceAll("é", "\u0065\u0301")
+    .replaceAll("í", "\u0069\u0301")
+    .replaceAll("ó", "\u006F\u0301")
+    .replaceAll("ú", "\u0075\u0301")
+    // beware: possibly more, e.g. with grave, circumflex, tilde, diaeresis, etc.
+    .replaceAll("ά", "\u03B1\u0301")
+    .replaceAll("έ", "\u03B5\u0301")
+    .replaceAll("ή", "\u03B7\u0301")
+    .replaceAll("ί", "\u03B9\u0301")
+    .replaceAll("ό", "\u03BF\u0301")
+    .replaceAll("ύ", "\u03C5\u0301")
+    .replaceAll("ώ", "\u03C9\u0301")
+		// beware: possibly more, e.g. vowels with dialytica
 	  .replaceAll(".", "-")
 	  .replaceAll(":", "-")
 		.replaceAll("?", "-");
