@@ -57,9 +57,20 @@ for await (const {path, name, isFile, isDirectory, isSymlink} of walk(ROOT)) {
 }
 
 function get_title(content: string): string {
-  const re = /^----\ntitle: (.+)$/m;
-	const matches = content.match(re);
-	return matches[1];
+  const re_frontmatter = /^----\ntitle: (.+)$/m;
+	const matches_frontmatter = content.match(re_frontmatter);
+
+	// first non-space line, trimmed, without leading `# ` if any
+	const re_header = /^\s*(?:# )?(.+?)\s*$/m;
+	const matches_header = content.match(re_header);
+
+	if (matches_frontmatter) {
+		return matches_frontmatter[1];
+	} else if (matches_header) {
+    return matches_header[1];
+	} else {
+    throw new Error(`Missing title in content '${content}'`);
+	}
 }
 
 function botched_escapes(filename: string): string {

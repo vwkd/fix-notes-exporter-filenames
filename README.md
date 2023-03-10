@@ -14,7 +14,7 @@ Fix filenames of notes exported with [Notes Exporter](http://falcon.star-lord.me
 
 ## Usage
 
-- export notes with frontmatter
+- export notes
 - run script
 
 ```sh
