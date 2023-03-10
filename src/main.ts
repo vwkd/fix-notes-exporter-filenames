@@ -7,7 +7,7 @@ if (!ROOT) {
   throw new Error(`argument of tree root path missing.`);
 }
 
-console.log(`Uppercasing notes in '${ROOT}'...`);
+console.log(`Fixing note filenames in '${ROOT}'...`);
 
 // walk through files
 for await (const {path, name, isFile, isDirectory, isSymlink} of walk(ROOT)) {
@@ -23,7 +23,7 @@ for await (const {path, name, isFile, isDirectory, isSymlink} of walk(ROOT)) {
 			continue;
 		}
 
-		console.log(`Uppercasing file '${path}'`);
+		// console.log(`Uppercasing file '${path}'`);
 
 		const dirpath = dirname(path);
 		// filename without ".md" extension
