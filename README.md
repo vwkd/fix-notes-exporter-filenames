@@ -12,10 +12,22 @@ Fix filenames of notes exported with [Notes Exporter](http://falcon.star-lord.me
 
 
 
+## Prerequisites
+
+- exported notes from Notes Exporter
+
+
+
 ## Usage
 
-- export notes
-- run script
+- as shell command
+
+```sh
+deno install -n fix-note-filenames --allow-read --allow-write https://raw.githubusercontent.com/vwkd/fix-notes-exporter-filenames/main/src/main.ts
+fix-note-filenames -- ../path/to/notes
+```
+
+- as developer
 
 ```sh
 deno task fix -- ../path/to/notes
