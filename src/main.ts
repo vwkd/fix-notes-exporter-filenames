@@ -15,7 +15,7 @@ for await (const {path, name, isFile, isDirectory, isSymlink} of walk(ROOT)) {
 		console.info(`NOTE: Skipping symlink '${path}'`);
 		continue;
 	} else if (isDirectory) {
-		console.info(`NOTE: Manually rename directory '${path}'`);
+		console.info(`NOTE: Skipping folder name '${path}'`);
 	} else if (isFile) {
 		if (!path.endsWith(".md")) {
       console.info(`NOTE: Skipping non-markdown file '${path}'`);
@@ -55,8 +55,8 @@ function get_title(content: string): string {
   const re_frontmatter = /^----\ntitle: (.+)$/m;
 	const matches_frontmatter = content.match(re_frontmatter);
 
-	// first non-space line, trimmed, without leading `# ` if any
-	const re_header = /^\s*(?:# )?(.+?)\s*$/m;
+	// first non-space line, trimmed, without leading `# ` if any, without wrapping `**` if any
+	const re_header = /^\s*(?:\*\*)?(?:# )?(.+?)(?:\*\*)?\s*$/m;
 	const matches_header = content.match(re_header);
 
 	if (matches_frontmatter) {
