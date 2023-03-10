@@ -4,14 +4,13 @@ import { dirname, join } from "https://deno.land/std@0.179.0/path/mod.ts";
 const ROOT = Deno.args[1];
 
 if (!ROOT) {
-  throw new Error(`argument of tree root path missing.`);
+  throw new Error(`Notes path argument missing.`);
 }
 
 console.log(`Fixing note filenames in '${ROOT}'...`);
 
-// walk through files
 for await (const {path, name, isFile, isDirectory, isSymlink} of walk(ROOT)) {
-	// console.log(`Processing entry '${JSON.stringify(path)}'`);
+
 	if (isSymlink) {
 		console.info(`NOTE: Skipping symlink '${path}'`);
 		continue;
@@ -28,17 +27,12 @@ for await (const {path, name, isFile, isDirectory, isSymlink} of walk(ROOT)) {
 		const dirpath = dirname(path);
 		// filename without ".md" extension
 		const filename = name.slice(0,-3);
-		// console.log(dirpath, filename);
 
-		// frontmatter title
 		const content = await Deno.readTextFile(path);
-	  // const frontmatter = extract(content);
-		// const title = frontmatter.attrs.title;
-		// console.log(frontmatter, title);
+
 		const title = get_title(content);
 		const titleBotched = botched_escapes(title);
 		const titleBotchedLowercase = botched_escapes(title.toLowerCase());
-		// console.log(title);
 
 		const re = /-(\d+)$/;
 		const matches = filename.match(re);
@@ -57,6 +51,7 @@ for await (const {path, name, isFile, isDirectory, isSymlink} of walk(ROOT)) {
 }
 
 function get_title(content: string): string {
+	// beware: non-standard YAML frontmatter with 4 dashes as delimiter, can't use off-the-shelf parser!
   const re_frontmatter = /^----\ntitle: (.+)$/m;
 	const matches_frontmatter = content.match(re_frontmatter);
 
@@ -75,9 +70,6 @@ function get_title(content: string): string {
 
 function botched_escapes(filename: string): string {
   return filename
-		// .replaceAll("Ä", "ä")
-		// .replaceAll("Ö", "ö")
-		// .replaceAll("Ü", "ü")
 		.replaceAll("ä", "\u0061\u0308")
 		.replaceAll("ö", "\u006F\u0308")
 		.replaceAll("ü", "\u0075\u0308")
