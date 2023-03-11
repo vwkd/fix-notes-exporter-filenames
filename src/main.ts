@@ -37,15 +37,24 @@ for await (const {path, name, isFile, isDirectory, isSymlink} of walk(ROOT)) {
 		const re = /-(\d+)$/;
 		const matches = filename.match(re);
 
-		// if lowercase title equals filename, rename filename to title add `.md` extension
-		if (titleBotchedLowercase == filename) {
+		// all good
+		if (title == filename) {
+			continue;
+		}
+		
+		// in earlier versions was uppercase, but botched transformations
+		// in later versions additionally botched escapes
+		if (botched_transformations(title) == filename) {
+			const pathNew = join(dirpath, title + ".md");
+			await Deno.rename(path, pathNew);
+		} else if (titleBotchedLowercase == filename) {
 			const pathNew = join(dirpath, title + ".md");
 			await Deno.rename(path, pathNew);
 		} else if (matches && (titleBotched + "-" + matches[1] == filename)) {
 			const pathNew = join(dirpath, title + "-" + matches[1] + ".md");
 			await Deno.rename(path, pathNew);
 		} else {
-			console.warn(`WARNING: Unexpected titleBotchedLowercase '${titleBotchedLowercase}' different from filename '${filename}'. Skipping '${path}'...`);
+			console.warn(`WARNING: Unexpected filename '${filename}'. Skipping '${path}'...`);
 		}
 	}
 }
@@ -62,14 +71,15 @@ function get_title(content: string): string {
 	if (matches_frontmatter) {
 		return matches_frontmatter[1];
 	} else if (matches_header) {
-    return matches_header[1];
+		const header = matches_header[1];
+		return header.slice(0, 70).trim();
 	} else {
     throw new Error(`Missing title in content '${content}'`);
 	}
 }
 
 function botched_escapes(filename: string): string {
-  return filename
+  return botched_transformations(filename)
 		.replaceAll("ä", "\u0061\u0308")
 		.replaceAll("ö", "\u006F\u0308")
 		.replaceAll("ü", "\u0075\u0308")
@@ -87,7 +97,13 @@ function botched_escapes(filename: string): string {
     .replaceAll("ύ", "\u03C5\u0301")
     .replaceAll("ώ", "\u03C9\u0301")
 		// beware: possibly more, e.g. vowels with dialytica
+}
+
+function botched_transformations(filename: string): string {
+	return filename
 	  .replaceAll(".", "-")
 	  .replaceAll(":", "-")
-		.replaceAll("?", "-");
+		.replaceAll("?", "-")
+		.replaceAll("&", "_")
+	  .replaceAll("%", "-");
 }
